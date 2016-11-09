@@ -31,7 +31,7 @@ function Node() {
 
 Node.prototype._noActiveNeighborsLeft = function(direction) {
   for (var neighborId in this._neighbors[direction]) {
-    if (this._neighbors[direction][neighborId].theirLastMsg.value === true) {
+    if (this._neighbors[direction][neighborId]._theirLastMsg.value === true) {
       return false;
     }
   }
@@ -49,9 +49,9 @@ Node.prototype._startWave = function(direction, value) {
 Node.prototype.addNeighbor = function(neighborId, direction, msgCallback) {
   if (typeof this._neighbors[direction][neighborId] === 'undefined') {
     this._neighbors[direction][neighborId] = new Neighbor(msgCallback);
-    var numSent  = this._startWave(OPPOSITE[direction]);
+    var numSent  = this._startWave(OPPOSITE[direction], true);
     if (numSent === 0) { // bounce against edge of network
-      this._startWave(direction);
+      this._startWave(direction, false);
     }     
   }
 };
@@ -64,7 +64,7 @@ Node.prototype.removeNeighbor = function(neighborId, direction) {
 };
 
 Node.prototype.handleMessage = function(neighborId, direction, msgObj) {
-  if (msgObj.value === false && this._noActiveNeighbors[direction]) {
+  if (msgObj.value === false && this._noActiveNeighborsLeft(direction)) {
     this._startWave(OPPOSITE[direction], false);
   }
   this._neighbors[direction][neighborId].saveMessage(msgObj);
