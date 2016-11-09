@@ -1,0 +1,27 @@
+{
+  "name": "ddcd-dfs",
+  "version": "0.0.1",
+  "description": "Decentralized Cycle Detection in Directed Graphs",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "jshint": "^2.9.4",
+    "mocha": "^3.1.2"
+  },
+  "scripts": {
+    "test": "./node_modules/.bin/jshint *.js test/*.js; ./node_modules/.bin/mocha test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ledgerloops/ddcd-dfs.git"
+  },
+  "author": "Michiel de Jong",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ledgerloops/ddcd-dfs/issues"
+  },
+  "homepage": "https://github.com/ledgerloops/ddcd-dfs#readme"
+}
