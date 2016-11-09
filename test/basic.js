@@ -8,7 +8,7 @@ describe('Node', function() {
     node = new Node();
   });
 
-  it('should add a link', function() {
-    assert.equal(typeof node.addLink, 'function');
+  it('should add a neighbor', function() {
+    assert.equal(typeof node.addNeighbor, 'function');
   });
 });
