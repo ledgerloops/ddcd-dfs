@@ -9,9 +9,12 @@
   "dependencies": {},
   "devDependencies": {
     "jshint": "^2.9.4",
-    "mocha": "^3.1.2"
+    "mocha": "^3.1.2",
+    "sinon": "^1.17.6"
   },
   "scripts": {
+    "jshint": "./node_modules/.bin/jshint *.js test/*.js",
+    "mocha": "./node_modules/.bin/mocha test/",
     "test": "./node_modules/.bin/jshint *.js test/*.js; ./node_modules/.bin/mocha test/"
   },
   "repository": {
