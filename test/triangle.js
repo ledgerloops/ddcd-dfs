@@ -9,7 +9,7 @@ describe('Three nodes', function() {
   function propagate() {
     while (msgQueue.length) {
       var args = msgQueue.shift();
-      console.log(`From ${args[1]} to ${args[0]}: ${args[2]}, ${args[3].value}, messages left: ${msgQueue.length}`);
+      // console.log(`From ${args[1]} to ${args[0]}: ${args[2]}, ${args[3].value}, ${args[3].timestamp}, messages left: ${msgQueue.length}`);
       nodes[args[0]].handleStatusMessage(args[1], args[2], args[3]);
     }
   }
@@ -34,9 +34,6 @@ describe('Three nodes', function() {
       msgQueue.push([ 'b', 'c', 'out', msgObj ]);
     });
 
-    // FIXME: this call to propagate should not be necessary, but without it, false/true whirl endlessly over the cycle
-    propagate();
-
     // c -> a
     nodes.a.addNeighbor('c', 'in', function(msgObj) {
       msgQueue.push([ 'c', 'a', 'out', msgObj ]);
@@ -45,9 +42,7 @@ describe('Three nodes', function() {
       msgQueue.push([ 'a', 'c', 'in', msgObj ]);
     });
 
-    console.log('propagation starting');
     propagate();
-    console.log('propagation done');
   });
 
   it('should find a cycle', function() {

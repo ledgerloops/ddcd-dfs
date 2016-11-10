@@ -1,14 +1,24 @@
 function Neighbor(msgCallback) {
   this._msgCallback = msgCallback;
-  this._theirLastMsg = {};
-  this._ourLastMsg = {};
+  this._theirLastMsg = {
+    timestamp: 0,
+  };
+  this._ourLastMsg = {
+    timestamp: 0,
+  };
 }
 
-Neighbor.prototype.sendStatusMessage = function(value) {
+Neighbor.prototype.sendStatusMessage = function(value, timestamp) {
   if (this._ourLastMsg.value === value) {
     return 0;
   }
-  this._ourLastMsg = { value: value };
+  if (this._ourLastMsg.timestamp > timestamp) {
+    return 0;
+  }
+  this._ourLastMsg = {
+    value,
+    timestamp,
+  };
   this._msgCallback(this._ourLastMsg);
   return 1;
 };
@@ -26,7 +36,7 @@ function Route(inNeighbor, treeToken) {
   this._treeToken = treeToken;
   this._outNeighbors = {
   };
-};
+}
 
 Route.prototype.getNextSiblingToTry = function(outNeighborIds) {
   for (var i=0; i<outNeighborIds.length; i++) {
@@ -56,7 +66,17 @@ function Node() {
     out: {},
   };
   this._routes = {};
+  this._lastTimestampGenerated = 0;
 }
+
+Node.prototype._getTimestamp = function() {
+  var candidate = new Date().getTime();
+  if (candidate <= this._lastTimestampGenerated) {
+    candidate++;
+  }
+  this._lastTimestampGenerated = candidate;
+  return candidate;
+};
 
 Node.prototype._noActiveNeighborsLeft = function(direction) {
   for (var neighborId in this._neighbors[direction]) {
@@ -67,42 +87,48 @@ Node.prototype._noActiveNeighborsLeft = function(direction) {
   return true;
 };
 
-Node.prototype._startWave = function(direction, value) {
+Node.prototype._startWave = function(direction, value, timestamp) {
   var numTried = 0;
   var numSent = 0;
   for (var neighborId in this._neighbors[direction]) {
     numTried++;
-    numSent += this._neighbors[direction][neighborId].sendStatusMessage(value);
+    numSent += this._neighbors[direction][neighborId].sendStatusMessage(value, timestamp);
   }
   if (value === false) {
     return; // no back wave
   }
   if (numTried === 0) { // bounce against edge of network
-    return false;
+    return {
+      value: false,
+      timestamp,
+     };
   }
   if (numSent === 0) { // special case, reply true
-    return true;
+    return {
+      value: true,
+      timestamp,
+    };
   }
 };
 
-Node.prototype._activate = function(direction) {
-  var msgBack  = this._startWave(direction, true);
-  if (typeof msgBack === 'boolean') {
-    this._startWave(OPPOSITE[direction], msgBack);
+Node.prototype._activate = function(direction, timestamp) {
+  var msgBack  = this._startWave(direction, true, timestamp);
+  if (typeof msgBack === 'object') {
+    this._startWave(OPPOSITE[direction], msgBack.value, msgBack.timestamp);
   }
 };
 
 Node.prototype.addNeighbor = function(neighborId, direction, msgCallback) {
   if (typeof this._neighbors[direction][neighborId] === 'undefined') {
     this._neighbors[direction][neighborId] = new Neighbor(msgCallback);
-    this._activate(OPPOSITE[direction]);
+    this._activate(OPPOSITE[direction], this._getTimestamp());
   }
 };
 
 Node.prototype.removeNeighbor = function(neighborId, direction) {
   delete this._neighbors[direction][neighborId];
   if (this._noNeighborsLeft(direction)) {
-    this._startWave(OPPOSITE[direction], false);
+    this._startWave(OPPOSITE[direction], false, this._getTimestamp());
   }
 };
 
@@ -130,11 +156,11 @@ Node.prototype.handleStatusMessage = function(neighborId, direction, msgObj) {
   this._neighbors[direction][neighborId].saveStatusMessage(msgObj);
 
   if (msgObj.value === true) {
-    this._activate(OPPOSITE[direction]);
+    this._activate(OPPOSITE[direction], msgObj.timestamp);
   }
 
   if (msgObj.value === false && this._noActiveNeighborsLeft(direction)) {
-    this._startWave(OPPOSITE[direction], false);
+    this._startWave(OPPOSITE[direction], false, msgObj.timestamp);
   }
 };
 

@@ -8,6 +8,9 @@ describe('Add in-neighbor', function() {
   var inSpy;
   beforeEach(function() {
     node = new Node();
+    var timestampSpy = sinon.stub(node, '_getTimestamp', function() {
+      return 123456;
+    });
     inSpy = sinon.spy();
     node.addNeighbor('a', 'in', inSpy);
   });
@@ -15,6 +18,7 @@ describe('Add in-neighbor', function() {
   it('should start false wave to in-neighbor', function() {
     assert.deepEqual(inSpy.args, [[{
       value: false,
+      timestamp: 123456,
     }]]);
   });
 });
@@ -24,12 +28,16 @@ describe('Add out-neighbor', function() {
   var outSpy;
   beforeEach(function() {
     node = new Node();
+    var timestampSpy = sinon.stub(node, '_getTimestamp', function() {
+      return 123456;
+    });
     outSpy = sinon.spy();
     node.addNeighbor('b', 'out', outSpy);
   });
 
   it('should start false wave to out-neighbor', function() {
     assert.deepEqual(outSpy.args, [[{
+      timestamp: 123456,
       value: false,
     }]]);
   });
@@ -41,6 +49,10 @@ describe('Add two in-neighbors', function() {
   var inSpy2;
   beforeEach(function() {
     node = new Node();
+    var counter = 1;
+    var timestampSpy = sinon.stub(node, '_getTimestamp', function() {
+      return counter++;
+    });
     inSpy1 = sinon.spy();
     inSpy2 = sinon.spy();
     node.addNeighbor('a', 'in', inSpy1);
@@ -50,9 +62,11 @@ describe('Add two in-neighbors', function() {
   it('should start false wave to each in-neighbor', function() {
     assert.deepEqual(inSpy1.args, [[{
       value: false,
+      timestamp: 1,
     }]]);
     assert.deepEqual(inSpy2.args, [[{
       value: false,
+      timestamp: 2,
     }]]);
   });
 
@@ -76,6 +90,10 @@ describe('Add two out-neighbors', function() {
   var outSpy2;
   beforeEach(function() {
     node = new Node();
+    var counter = 1;
+    var timestampSpy = sinon.stub(node, '_getTimestamp', function() {
+      return counter++;
+    });
     outSpy1 = sinon.spy();
     outSpy2 = sinon.spy();
     node.addNeighbor('a', 'out', outSpy1);
@@ -85,9 +103,11 @@ describe('Add two out-neighbors', function() {
   it('should start false wave to each out-neighbor', function() {
     assert.deepEqual(outSpy1.args, [[{
       value: false,
+      timestamp: 1,
     }]]);
     assert.deepEqual(outSpy2.args, [[{
       value: false,
+      timestamp: 2,
     }]]);
   });
 
@@ -110,6 +130,10 @@ describe('Add in-neighbor, then out-neighbor', function() {
   var outSpy;
   beforeEach(function() {
     node = new Node();
+    var counter = 1;
+    var timestampSpy = sinon.stub(node, '_getTimestamp', function() {
+      return counter++;
+    });
     inSpy = sinon.spy();
     outSpy = sinon.spy();
     node.addNeighbor('a', 'in', inSpy);
@@ -119,20 +143,26 @@ describe('Add in-neighbor, then out-neighbor', function() {
   it('should start false-then-true wave to in-neighbor', function() {
     assert.deepEqual(inSpy.args, [[{
       value: false,
+      timestamp: 1,
     }], [{
       value: true,
+      timestamp: 2,
     }]]);
     assert.deepEqual(outSpy.args, []);
   });
 
   describe('in-neighbor replies false', function() {
     beforeEach(function() {
-      node.handleStatusMessage('a', 'in', { value: false });
+      node.handleStatusMessage('a', 'in', {
+        value: false,
+        timestamp: 123456,
+      });
     });
 
     it('should start false wave to out-neighbor', function() {
       assert.deepEqual(outSpy.args, [[{
         value: false,
+        timestamp: 123456,
       }]]);
     });
   });
