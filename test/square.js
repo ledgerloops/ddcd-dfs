@@ -2,26 +2,26 @@ var Node = require('../index.js');
 var Graph = require('./helpers/graph.js');
 var assert = require('assert');
 
-describe('Three nodes', function() {
+describe('Four nodes', function() {
   var graph;
-
   beforeEach(function() {
     graph = new Graph({
       a: new Node(),
       b: new Node(),
       c: new Node(),
+      d: new Node(),
     });
     graph.connect('a', 'b');
     graph.connect('b', 'c');
-    graph.connect('c', 'a');
-
+    graph.connect('c', 'd');
+    graph.connect('d', 'a');
     graph.propagate();
   });
 
   it('should find a cycle', function() {
     //setTimeout(function() {
       assert.deepEqual(graph.nodes.a.getActiveNeighbors(), {
-        'in': ['c'],
+        'in': ['d'],
         out: ['b'],
       });
       assert.deepEqual(graph.nodes.b.getActiveNeighbors(), {
@@ -30,6 +30,10 @@ describe('Three nodes', function() {
       });
       assert.deepEqual(graph.nodes.c.getActiveNeighbors(), {
         'in': ['b'],
+        out: ['d'],
+      });
+      assert.deepEqual(graph.nodes.d.getActiveNeighbors(), {
+        'in': ['c'],
         out: ['a'],
       });
     //}, 100);
