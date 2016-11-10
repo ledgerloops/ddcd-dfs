@@ -62,7 +62,7 @@ describe('Add two in-neighbors', function() {
       outSpy = sinon.spy();
       node.addNeighbor('b', 'out', outSpy);
     });
-  
+
     it('should not start false wave to out-neighbor', function() {
       assert.deepEqual(outSpy.args, []);
     });
@@ -97,7 +97,7 @@ describe('Add two out-neighbors', function() {
       inSpy = sinon.spy();
       node.addNeighbor('a', 'in', inSpy);
     });
-  
+
     it('should not start false wave to in-neighbor', function() {
       assert.deepEqual(inSpy.args, []);
     });

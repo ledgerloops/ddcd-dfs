@@ -1,55 +1,57 @@
 var Node = require('../index.js');
 
 var assert = require('assert');
-var sinon = require('sinon');
 
 describe('Three nodes', function() {
   var nodes = {
   };
-  var inSpy;
+  var msgQueue = [];
+  function propagate() {
+    while (msgQueue.length) {
+      var args = msgQueue.shift();
+      console.log(`From ${args[1]} to ${args[0]}: ${args[2]}, ${args[3].value}, messages left: ${msgQueue.length}`);
+      nodes[args[0]].handleStatusMessage(args[1], args[2], args[3]);
+    }
+  }
+
   beforeEach(function() {
     nodes.a = new Node();
     nodes.b = new Node();
     nodes.c = new Node();
+    // a -> b
     nodes.a.addNeighbor('b', 'out', function(msgObj) {
-      setTimeout(function () {
-        nodes.b.handleStatusMessage('a', 'in', msgObj);
-      }, 0);
-    });
-    nodes.a.addNeighbor('c', 'in', function(msgObj) {
-      setTimeout(function () {
-        nodes.c.handleStatusMessage('a', 'out', msgObj);
-      }, 0);
-    });
-    nodes.b.addNeighbor('c', 'out', function(msgObj) {
-      setTimeout(function () {
-        nodes.c.handleStatusMessage('b', 'in', msgObj);
-      }, 0);
+      msgQueue.push([ 'b', 'a', 'in', msgObj ]);
     });
     nodes.b.addNeighbor('a', 'in', function(msgObj) {
-      setTimeout(function () {
-        nodes.a.handleStatusMessage('b', 'out', msgObj);
-      }, 0);
+      msgQueue.push([ 'a', 'b', 'out', msgObj ]);
     });
-    nodes.c.addNeighbor('a', 'out', function(msgObj) {
-      setTimeout(function () {
-        nodes.a.handleStatusMessage('c', 'in', msgObj);
-      }, 0);
+
+    // b -> c
+    nodes.b.addNeighbor('c', 'out', function(msgObj) {
+      msgQueue.push([ 'c', 'b', 'in', msgObj ]);
     });
     nodes.c.addNeighbor('b', 'in', function(msgObj) {
-      setTimeout(function () {
-        nodes.b.handleStatusMessage('c', 'out', msgObj);
-      }, 0);
+      msgQueue.push([ 'b', 'c', 'out', msgObj ]);
     });
-//    return new Promise((resolve) => {
-//      setTimeout(function() {
-//        resolve();
-//      }, 100);
-//    });
+
+    // FIXME: this call to propagate should not be necessary, but without it, false/true whirl endlessly over the cycle
+    propagate();
+
+    // c -> a
+    nodes.a.addNeighbor('c', 'in', function(msgObj) {
+      msgQueue.push([ 'c', 'a', 'out', msgObj ]);
+    });
+    nodes.c.addNeighbor('a', 'out', function(msgObj) {
+      msgQueue.push([ 'a', 'c', 'in', msgObj ]);
+    });
+
+    console.log('propagation starting');
+    propagate();
+    console.log('propagation done');
   });
 
   it('should find a cycle', function() {
-    setTimeout(function() {
+    //setTimeout(function() {
       assert.deepEqual(nodes.a.getActiveNeighbors(), {
         'in': ['c'],
         out: ['b'],
@@ -62,16 +64,16 @@ describe('Three nodes', function() {
         'in': ['b'],
         out: ['a'],
       });
-    }, 100);
+    //}, 100);
   });
-  describe('incoming probe message for a', function() {
-    beforeEach(function(done) {
-      nodes.a.handleProbeMessage('c', 'in', {
-        treeToken: 'asdf',
-      });
-      setTimeout(done, 10);
-    });
-    it('should find a route', function() {
-    });
-  });
+//   describe('incoming probe message for a', function() {
+//     beforeEach(function(done) {
+//       nodes.a.handleProbeMessage('c', 'in', {
+//         treeToken: 'asdf',
+//       });
+//       setTimeout(done, 10);
+//     });
+//     it('should find a route', function() {
+//     });
+//   });
 });

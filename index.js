@@ -6,7 +6,7 @@ function Neighbor(msgCallback) {
 
 Neighbor.prototype.sendStatusMessage = function(value) {
   if (this._ourLastMsg.value === value) {
-    return 1;
+    return 0;
   }
   this._ourLastMsg = { value: value };
   this._msgCallback(this._ourLastMsg);
@@ -37,6 +37,14 @@ Route.prototype.getNextSiblingToTry = function(outNeighborIds) {
   }
 };
 
+Route.prototype.getOutNeighborNick = function(pathToken) {
+  for (var outNeighborNick in this._outNeighbors) {
+    if (this._outNeighbors[outNeighborNick] === pathToken) {
+      return outNeighborNick;
+    }
+  }
+};
+
 var OPPOSITE = {
   'in': 'out',
   out: 'in',
@@ -60,20 +68,34 @@ Node.prototype._noActiveNeighborsLeft = function(direction) {
 };
 
 Node.prototype._startWave = function(direction, value) {
+  var numTried = 0;
   var numSent = 0;
   for (var neighborId in this._neighbors[direction]) {
+    numTried++;
     numSent += this._neighbors[direction][neighborId].sendStatusMessage(value);
   }
-  return numSent;
+  if (value === false) {
+    return; // no back wave
+  }
+  if (numTried === 0) { // bounce against edge of network
+    return false;
+  }
+  if (numSent === 0) { // special case, reply true
+    return true;
+  }
+};
+
+Node.prototype._activate = function(direction) {
+  var msgBack  = this._startWave(direction, true);
+  if (typeof msgBack === 'boolean') {
+    this._startWave(OPPOSITE[direction], msgBack);
+  }
 };
 
 Node.prototype.addNeighbor = function(neighborId, direction, msgCallback) {
   if (typeof this._neighbors[direction][neighborId] === 'undefined') {
     this._neighbors[direction][neighborId] = new Neighbor(msgCallback);
-    var numSent  = this._startWave(OPPOSITE[direction], true);
-    if (numSent === 0) { // bounce against edge of network
-      this._startWave(direction, false);
-    }     
+    this._activate(OPPOSITE[direction]);
   }
 };
 
@@ -105,10 +127,15 @@ Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
 };
 
 Node.prototype.handleStatusMessage = function(neighborId, direction, msgObj) {
+  this._neighbors[direction][neighborId].saveStatusMessage(msgObj);
+
+  if (msgObj.value === true) {
+    this._activate(OPPOSITE[direction]);
+  }
+
   if (msgObj.value === false && this._noActiveNeighborsLeft(direction)) {
     this._startWave(OPPOSITE[direction], false);
   }
-  this._neighbors[direction][neighborId].saveStatusMessage(msgObj);
 };
 
 Node.prototype.getActiveNeighbors = function() {
@@ -124,6 +151,14 @@ Node.prototype.getActiveNeighbors = function() {
     }
   });
   return ret;
+};
+
+Node.prototype.getPeerPair = function(treeToken, pathToken, inNeighborNick) {
+  var route = this._routes[treeToken];
+  return {
+    inNeighborNick: inNeighborNick,
+    outNeighborNick: this._routes[treeToken].getOutNeighborNick(pathToken),
+  };
 };
 
 module.exports = Node;
