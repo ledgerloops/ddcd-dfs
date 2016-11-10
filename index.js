@@ -70,4 +70,19 @@ Node.prototype.handleMessage = function(neighborId, direction, msgObj) {
   this._neighbors[direction][neighborId].saveMessage(msgObj);
 };
 
+Node.prototype.getActiveNeighbors = function() {
+  var ret = {
+    'in': [],
+    out: [],
+  };
+  ['in', 'out'].map(direction => {
+    for (var neighborId in this._neighbors['in']) {
+      if (this._neighbors['in'][neighborId]._theirLastMsg.value === true) {
+        ret[direction].push(neighborId);
+      }
+    }
+  });
+  return ret;
+};
+
 module.exports = Node;
