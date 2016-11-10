@@ -117,8 +117,8 @@ Node.prototype.getActiveNeighbors = function() {
     out: [],
   };
   ['in', 'out'].map(direction => {
-    for (var neighborId in this._neighbors['in']) {
-      if (this._neighbors['in'][neighborId]._theirLastMsg.value === true) {
+    for (var neighborId in this._neighbors[direction]) {
+      if (this._neighbors[direction][neighborId]._theirLastMsg.value === true) {
         ret[direction].push(neighborId);
       }
     }

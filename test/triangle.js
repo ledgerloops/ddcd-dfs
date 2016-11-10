@@ -41,22 +41,37 @@ describe('Three nodes', function() {
         nodes.b.handleStatusMessage('c', 'out', msgObj);
       }, 0);
     });
+//    return new Promise((resolve) => {
+//      setTimeout(function() {
+//        resolve();
+//      }, 100);
+//    });
   });
 
   it('should find a cycle', function() {
     setTimeout(function() {
       assert.deepEqual(nodes.a.getActiveNeighbors(), {
-        'in': 'c',
-        out: 'b',
+        'in': ['c'],
+        out: ['b'],
       });
       assert.deepEqual(nodes.b.getActiveNeighbors(), {
-        'in': 'a',
-        out: 'c',
+        'in': ['a'],
+        out: ['c'],
       });
       assert.deepEqual(nodes.c.getActiveNeighbors(), {
-        'in': 'b',
-        out: 'a',
+        'in': ['b'],
+        out: ['a'],
       });
-    }, 10);
+    }, 100);
+  });
+  describe('incoming probe message for a', function() {
+    beforeEach(function(done) {
+      nodes.a.handleProbeMessage('c', 'in', {
+        treeToken: 'asdf',
+      });
+      setTimeout(done, 10);
+    });
+    it('should find a route', function() {
+    });
   });
 });
