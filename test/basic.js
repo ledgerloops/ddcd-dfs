@@ -127,7 +127,7 @@ describe('Add in-neighbor, then out-neighbor', function() {
 
   describe('in-neighbor replies false', function() {
     beforeEach(function() {
-      node.handleMessage('a', 'in', { value: false });
+      node.handleStatusMessage('a', 'in', { value: false });
     });
 
     it('should start false wave to out-neighbor', function() {

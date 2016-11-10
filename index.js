@@ -4,7 +4,7 @@ function Neighbor(msgCallback) {
   this._ourLastMsg = {};
 }
 
-Neighbor.prototype.sendMessage = function(value) {
+Neighbor.prototype.sendStatusMessage = function(value) {
   if (this._ourLastMsg.value === value) {
     return 1;
   }
@@ -13,8 +13,28 @@ Neighbor.prototype.sendMessage = function(value) {
   return 1;
 };
 
-Neighbor.prototype.saveMessage = function(msgObj) {
+Neighbor.prototype.sendProbeMessage = function(msgObj) {
+  this._msgCallback(msgObj);
+};
+
+Neighbor.prototype.saveStatusMessage = function(msgObj) {
   this._theirLastMsg = msgObj;
+};
+
+function Route(inNeighbor, treeToken) {
+  this._inNeighbor = inNeighbor;
+  this._treeToken = treeToken;
+  this._outNeighbors = {
+  };
+};
+
+Route.prototype.getNextSiblingToTry = function(outNeighborIds) {
+  for (var i=0; i<outNeighborIds.length; i++) {
+    if (typeof this._outNeigbors[outNeighborIds[i]] === 'undefined') {
+      this._outNeighbors[outNeighborIds[i]] = generateNewPathToken();
+      return outNeighborIds[i];
+    }
+  }
 };
 
 var OPPOSITE = {
@@ -27,6 +47,7 @@ function Node() {
     'in': {},
     out: {},
   };
+  this._routes = {};
 }
 
 Node.prototype._noActiveNeighborsLeft = function(direction) {
@@ -41,7 +62,7 @@ Node.prototype._noActiveNeighborsLeft = function(direction) {
 Node.prototype._startWave = function(direction, value) {
   var numSent = 0;
   for (var neighborId in this._neighbors[direction]) {
-    numSent += this._neighbors[direction][neighborId].sendMessage(value);
+    numSent += this._neighbors[direction][neighborId].sendStatusMessage(value);
   }
   return numSent;
 };
@@ -63,11 +84,31 @@ Node.prototype.removeNeighbor = function(neighborId, direction) {
   }
 };
 
-Node.prototype.handleMessage = function(neighborId, direction, msgObj) {
+Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
+  if (direction === 'in') {
+    this._routes[msgObj.treeToken] = new Route(neighborId, msgObj.treeToken, msgObj.pathToken);
+    var firstOutNeighborId = this._routes[msgObj.treeToken].getNextSiblingToTry(this.getActiveNeighbors().out);
+    if (firstOutNeighborId) {
+      this._neighbors.out[firstOutNeighborId].sendProbeMessage(msgObj);
+    } else { // backtrack
+      this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
+    }
+  } else {
+    var nextOutNeighborId = this._routes[msgObj.treeToken].getNextSiblingToTry(this.getActiveNeighbors().out);
+    if (nextOutNeighborId) {
+      msgObj.pathToken = this._routes[msgObj.treeToken].getPathToken();
+      this._neighbors.out[nextOutNeighborId].sendProbeMessage(msgObj);
+    } else { // backtrack
+      this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
+    }
+  }
+};
+
+Node.prototype.handleStatusMessage = function(neighborId, direction, msgObj) {
   if (msgObj.value === false && this._noActiveNeighborsLeft(direction)) {
     this._startWave(OPPOSITE[direction], false);
   }
-  this._neighbors[direction][neighborId].saveMessage(msgObj);
+  this._neighbors[direction][neighborId].saveStatusMessage(msgObj);
 };
 
 Node.prototype.getActiveNeighbors = function() {
