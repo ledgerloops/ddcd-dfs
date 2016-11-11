@@ -13,6 +13,7 @@ function Node() {
   };
   this._routes = {};
   this._lastTimestampGenerated = 0;
+  this._cycleFound = false;
 }
 
 Node.prototype._getTimestamp = function() {
@@ -85,7 +86,12 @@ Node.prototype._probeIsKnown = function(treeToken) {
 Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
   if (direction === 'in') {
     if (this._probeIsKnown(msgObj.treeToken)) {
-      this._cycleFound = true;
+      if (this._routes[msgObj.treeToken].wasBacktracked()) {
+        //cross-edge, backtrack again
+        this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
+      } else {
+        this._cycleFound = true;
+      }
       return;
     }
     this._routes[msgObj.treeToken] = new Route(neighborId, msgObj.treeToken, msgObj.pathToken);
@@ -93,6 +99,7 @@ Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
     if (firstOutNeighborId) {
       this._neighbors.out[firstOutNeighborId].sendProbeMessage(msgObj);
     } else { // backtrack
+      this._routes[msgObj.treeToken].markBacktracked();
       this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
     }
   } else {
@@ -101,6 +108,7 @@ Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
       msgObj.pathToken = this._routes[msgObj.treeToken].getPathToken();
       this._neighbors.out[nextOutNeighborId].sendProbeMessage(msgObj);
     } else { // backtrack
+      this._routes[msgObj.treeToken].markBacktracked();
       this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
     }
   }

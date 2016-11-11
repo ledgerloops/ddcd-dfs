@@ -2,37 +2,39 @@ var Node = require('../index.js');
 var Graph = require('./helpers/graph.js');
 var assert = require('assert');
 
-describe('Four nodes', function() {
+describe('Cross-edge', function() {
   var graph;
   beforeEach(function() {
     graph = new Graph({
       a: new Node(),
       b: new Node(),
       c: new Node(),
-      d: new Node(),
     });
+
+    //  --------
+    // v        \
+    // a -> b -> c
+    //  \        ^
+    //   --------
+
     graph.connect('a', 'b');
     graph.connect('b', 'c');
-    graph.connect('c', 'd');
-    graph.connect('d', 'a');
+    graph.connect('a', 'c');
+    graph.connect('c', 'a');
     return graph.propagate();
   });
 
-  it('should find a cycle', function() {
+  it('should find both cycles', function() {
     assert.deepEqual(graph.nodes.a.getActiveNeighbors(), {
-      'in': ['d'],
-      out: ['b'],
+      'in': ['c'],
+      out: ['b', 'c'],
     });
     assert.deepEqual(graph.nodes.b.getActiveNeighbors(), {
       'in': ['a'],
       out: ['c'],
     });
     assert.deepEqual(graph.nodes.c.getActiveNeighbors(), {
-      'in': ['b'],
-      out: ['d'],
-    });
-    assert.deepEqual(graph.nodes.d.getActiveNeighbors(), {
-      'in': ['c'],
+      'in': ['b', 'a'],
       out: ['a'],
     });
   });
@@ -43,7 +45,7 @@ describe('Four nodes', function() {
       });
       return graph.propagate();
     });
-    it('a should find a route', function() {
+    it('a should not find a route', function() {
       assert.equal(graph.nodes.a._cycleFound, true);
     });
     it('b should not find a route', function() {
@@ -51,9 +53,6 @@ describe('Four nodes', function() {
     });
     it('c should not find a route', function() {
       assert.equal(graph.nodes.c._cycleFound, false);
-    });
-    it('d should not find a route', function() {
-      assert.equal(graph.nodes.d._cycleFound, false);
     });
   });
 });

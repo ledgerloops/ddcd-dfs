@@ -9,6 +9,7 @@ function Route(inNeighbor, treeToken) {
   this._treeToken = treeToken;
   this._outNeighbors = {
   };
+  this._backtracked = false;
 }
 
 Route.prototype.getNextSiblingToTry = function(outNeighborIds) {
@@ -26,6 +27,14 @@ Route.prototype.getOutNeighborNick = function(pathToken) {
       return outNeighborNick;
     }
   }
+};
+
+Route.prototype.markBacktracked = function() {
+  this._backtracked = true;
+};
+
+Route.prototype.wasBacktracked = function() {
+  return this._backtracked;
 };
 
 module.exports = Route;

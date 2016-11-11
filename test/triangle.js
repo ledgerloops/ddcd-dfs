@@ -41,8 +41,14 @@ describe('Three nodes', function() {
       });
       return graph.propagate();
     });
-    it('should find a route', function() {
+    it('a should find a route', function() {
       assert.equal(graph.nodes.a._cycleFound, true);
+    });
+    it('b should not find a route', function() {
+      assert.equal(graph.nodes.b._cycleFound, false);
+    });
+    it('c should not find a route', function() {
+      assert.equal(graph.nodes.c._cycleFound, false);
     });
   });
 });
