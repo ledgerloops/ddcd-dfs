@@ -1,3 +1,9 @@
+var randomstring = require('randomstring');
+
+function generateNewPathToken() {
+  return randomstring.generate(40);
+}
+
 function Neighbor(msgCallback) {
   this._msgCallback = msgCallback;
   this._theirLastMsg = {
@@ -16,6 +22,7 @@ Neighbor.prototype.sendStatusMessage = function(value, timestamp) {
     return 0;
   }
   this._ourLastMsg = {
+    msgType: 'status',
     value,
     timestamp,
   };
@@ -24,6 +31,7 @@ Neighbor.prototype.sendStatusMessage = function(value, timestamp) {
 };
 
 Neighbor.prototype.sendProbeMessage = function(msgObj) {
+  msgObj.msgType = 'probe';
   this._msgCallback(msgObj);
 };
 
@@ -40,7 +48,7 @@ function Route(inNeighbor, treeToken) {
 
 Route.prototype.getNextSiblingToTry = function(outNeighborIds) {
   for (var i=0; i<outNeighborIds.length; i++) {
-    if (typeof this._outNeigbors[outNeighborIds[i]] === 'undefined') {
+    if (typeof this._outNeighbors[outNeighborIds[i]] === 'undefined') {
       this._outNeighbors[outNeighborIds[i]] = generateNewPathToken();
       return outNeighborIds[i];
     }
@@ -132,8 +140,16 @@ Node.prototype.removeNeighbor = function(neighborId, direction) {
   }
 };
 
+Node.prototype._probeIsKnown = function(treeToken) {
+  return (typeof this._routes[treeToken] !== 'undefined');
+};
+
 Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
   if (direction === 'in') {
+    if (this._probeIsKnown(msgObj.treeToken)) {
+      this._cycleFound = true;
+      return;
+    }
     this._routes[msgObj.treeToken] = new Route(neighborId, msgObj.treeToken, msgObj.pathToken);
     var firstOutNeighborId = this._routes[msgObj.treeToken].getNextSiblingToTry(this.getActiveNeighbors().out);
     if (firstOutNeighborId) {
@@ -153,6 +169,11 @@ Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
 };
 
 Node.prototype.handleStatusMessage = function(neighborId, direction, msgObj) {
+  var now = new Date().getTime();
+  if (msgObj.timestamp > now) {
+    msgObj.timestamp = now;
+  }
+
   this._neighbors[direction][neighborId].saveStatusMessage(msgObj);
 
   if (msgObj.value === true) {

@@ -17,6 +17,7 @@ describe('Add in-neighbor', function() {
 
   it('should start false wave to in-neighbor', function() {
     assert.deepEqual(inSpy.args, [[{
+      msgType: 'status',
       value: false,
       timestamp: 123456,
     }]]);
@@ -37,6 +38,7 @@ describe('Add out-neighbor', function() {
 
   it('should start false wave to out-neighbor', function() {
     assert.deepEqual(outSpy.args, [[{
+      msgType: 'status',
       timestamp: 123456,
       value: false,
     }]]);
@@ -61,10 +63,12 @@ describe('Add two in-neighbors', function() {
 
   it('should start false wave to each in-neighbor', function() {
     assert.deepEqual(inSpy1.args, [[{
+      msgType: 'status',
       value: false,
       timestamp: 1,
     }]]);
     assert.deepEqual(inSpy2.args, [[{
+      msgType: 'status',
       value: false,
       timestamp: 2,
     }]]);
@@ -102,10 +106,12 @@ describe('Add two out-neighbors', function() {
 
   it('should start false wave to each out-neighbor', function() {
     assert.deepEqual(outSpy1.args, [[{
+      msgType: 'status',
       value: false,
       timestamp: 1,
     }]]);
     assert.deepEqual(outSpy2.args, [[{
+      msgType: 'status',
       value: false,
       timestamp: 2,
     }]]);
@@ -142,9 +148,11 @@ describe('Add in-neighbor, then out-neighbor', function() {
 
   it('should start false-then-true wave to in-neighbor', function() {
     assert.deepEqual(inSpy.args, [[{
+      msgType: 'status',
       value: false,
       timestamp: 1,
     }], [{
+      msgType: 'status',
       value: true,
       timestamp: 2,
     }]]);
@@ -154,6 +162,7 @@ describe('Add in-neighbor, then out-neighbor', function() {
   describe('in-neighbor replies false', function() {
     beforeEach(function() {
       node.handleStatusMessage('a', 'in', {
+        msgType: 'status',
         value: false,
         timestamp: 123456,
       });
@@ -161,6 +170,7 @@ describe('Add in-neighbor, then out-neighbor', function() {
 
     it('should start false wave to out-neighbor', function() {
       assert.deepEqual(outSpy.args, [[{
+        msgType: 'status',
         value: false,
         timestamp: 123456,
       }]]);
