@@ -83,31 +83,49 @@ Node.prototype._probeIsKnown = function(treeToken) {
   return (typeof this._routes[treeToken] !== 'undefined');
 };
 
+Node.prototype.startProbeMessage = function () {
+  var treeToken = Route.generateTreeToken();
+  this._routes[treeToken] = new Route(undefined, treeToken);
+  var firstOutNeighborId = this._routes[treeToken].getNextSiblingToTry(this.getActiveNeighbors().out);
+  if (firstOutNeighborId) {
+    console.log('first out neighbor', firstOutNeighborId);
+    this._neighbors.out[firstOutNeighborId].sendProbeMessage({
+      treeToken,
+      pathToken: this._routes[treeToken].getPathToken(firstOutNeighborId),
+    });
+  }
+};
+
 Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
   if (direction === 'in') {
     if (this._probeIsKnown(msgObj.treeToken)) {
-      if (this._routes[msgObj.treeToken].wasBacktracked()) {
-        //cross-edge, backtrack again
-        this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
-      } else {
+      console.log('probe is known! in from:', neighborId, this._routes);
+//      if (this._routes[msgObj.treeToken].wasBacktracked()) {
+//        //cross-edge, backtrack again
+//        this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
+//      } else {
         this._cycleFound = true;
-      }
+//      }
       return;
     }
     this._routes[msgObj.treeToken] = new Route(neighborId, msgObj.treeToken, msgObj.pathToken);
     var firstOutNeighborId = this._routes[msgObj.treeToken].getNextSiblingToTry(this.getActiveNeighbors().out);
     if (firstOutNeighborId) {
+      console.log('first out neighbor', firstOutNeighborId);
       this._neighbors.out[firstOutNeighborId].sendProbeMessage(msgObj);
     } else { // backtrack
+      console.log('backtrack from in to', neighborId);
       this._routes[msgObj.treeToken].markBacktracked();
       this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
     }
   } else {
     var nextOutNeighborId = this._routes[msgObj.treeToken].getNextSiblingToTry(this.getActiveNeighbors().out);
     if (nextOutNeighborId) {
-      msgObj.pathToken = this._routes[msgObj.treeToken].getPathToken();
+      console.log('next out neighbor', nextOutNeighborId);
+      msgObj.pathToken = this._routes[msgObj.treeToken].getPathToken(nextOutNeighborId);
       this._neighbors.out[nextOutNeighborId].sendProbeMessage(msgObj);
     } else { // backtrack
+      console.log('backtrack from out to', neighborId);
       this._routes[msgObj.treeToken].markBacktracked();
       this._neighbors['in'][neighborId].sendProbeMessage(msgObj);
     }
@@ -146,11 +164,11 @@ Node.prototype.getActiveNeighbors = function() {
   return ret;
 };
 
-Node.prototype.getPeerPair = function(treeToken, pathToken, inNeighborNick) {
+Node.prototype.getPeerPair = function(treeToken, pathToken, inNeighborId) {
   var route = this._routes[treeToken];
   return {
-    inNeighborNick: inNeighborNick,
-    outNeighborNick: this._routes[treeToken].getOutNeighborNick(pathToken),
+    inNeighborId: inNeighborId,
+    outNeighborId: this._routes[treeToken].getOutNeighborId(pathToken),
   };
 };
 

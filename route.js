@@ -1,6 +1,6 @@
 var randomstring = require('randomstring');
 
-function generateNewPathToken() {
+function generateNewToken() {
   return randomstring.generate(40);
 }
 
@@ -12,19 +12,25 @@ function Route(inNeighbor, treeToken) {
   this._backtracked = false;
 }
 
+Route.generateTreeToken = generateNewToken;
+
 Route.prototype.getNextSiblingToTry = function(outNeighborIds) {
   for (var i=0; i<outNeighborIds.length; i++) {
     if (typeof this._outNeighbors[outNeighborIds[i]] === 'undefined') {
-      this._outNeighbors[outNeighborIds[i]] = generateNewPathToken();
+      this._outNeighbors[outNeighborIds[i]] = generateNewToken();
       return outNeighborIds[i];
     }
   }
 };
 
-Route.prototype.getOutNeighborNick = function(pathToken) {
-  for (var outNeighborNick in this._outNeighbors) {
-    if (this._outNeighbors[outNeighborNick] === pathToken) {
-      return outNeighborNick;
+Route.prototype.getPathToken = function(outNeighborId) {
+  return this._outNeighbors[outNeighborId];
+};
+
+Route.prototype.getOutNeighborId = function(pathToken) {
+  for (var outNeighborId in this._outNeighbors) {
+    if (this._outNeighbors[outNeighborId] === pathToken) {
+      return outNeighborId;
     }
   }
 };
