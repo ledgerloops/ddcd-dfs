@@ -15,7 +15,7 @@ describe('Three nodes', function() {
     graph.connect('b', 'c');
     graph.connect('c', 'a');
 
-    graph.propagate();
+    return graph.propagate();
   });
 
   it('should find a cycle', function() {
@@ -39,7 +39,7 @@ describe('Three nodes', function() {
       graph.nodes.a.handleProbeMessage('c', 'in', {
         treeToken: 'asdf',
       });
-      graph.propagate();
+      return graph.propagate();
     });
     it('should find a route', function() {
       assert.equal(graph.nodes.a._cycleFound, true);

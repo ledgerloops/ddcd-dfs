@@ -15,35 +15,33 @@ describe('Four nodes', function() {
     graph.connect('b', 'c');
     graph.connect('c', 'd');
     graph.connect('d', 'a');
-    graph.propagate();
+    return graph.propagate();
   });
 
   it('should find a cycle', function() {
-    //setTimeout(function() {
-      assert.deepEqual(graph.nodes.a.getActiveNeighbors(), {
-        'in': ['d'],
-        out: ['b'],
-      });
-      assert.deepEqual(graph.nodes.b.getActiveNeighbors(), {
-        'in': ['a'],
-        out: ['c'],
-      });
-      assert.deepEqual(graph.nodes.c.getActiveNeighbors(), {
-        'in': ['b'],
-        out: ['d'],
-      });
-      assert.deepEqual(graph.nodes.d.getActiveNeighbors(), {
-        'in': ['c'],
-        out: ['a'],
-      });
-    //}, 100);
+    assert.deepEqual(graph.nodes.a.getActiveNeighbors(), {
+      'in': ['d'],
+      out: ['b'],
+    });
+    assert.deepEqual(graph.nodes.b.getActiveNeighbors(), {
+      'in': ['a'],
+      out: ['c'],
+    });
+    assert.deepEqual(graph.nodes.c.getActiveNeighbors(), {
+      'in': ['b'],
+      out: ['d'],
+    });
+    assert.deepEqual(graph.nodes.d.getActiveNeighbors(), {
+      'in': ['c'],
+      out: ['a'],
+    });
   });
   describe('incoming probe message for a', function() {
     beforeEach(function() {
       graph.nodes.a.handleProbeMessage('c', 'in', {
         treeToken: 'asdf',
       });
-      graph.propagate();
+      return graph.propagate();
     });
     it('should find a route', function() {
       assert.equal(graph.nodes.a._cycleFound, true);

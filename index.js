@@ -169,6 +169,11 @@ Node.prototype.handleProbeMessage = function(neighborId, direction, msgObj) {
 };
 
 Node.prototype.handleStatusMessage = function(neighborId, direction, msgObj) {
+  var now = new Date().getTime();
+  if (msgObj.timestamp > now) {
+    msgObj.timestamp = now;
+  }
+
   this._neighbors[direction][neighborId].saveStatusMessage(msgObj);
 
   if (msgObj.value === true) {
