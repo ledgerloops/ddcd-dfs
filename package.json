@@ -1,6 +1,6 @@
 {
   "name": "ddcd-dfs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "https://ledgerloops.com/ - Decentralized Cycle Detection in Directed Graphs",
   "main": "index.js",
   "directories": {
