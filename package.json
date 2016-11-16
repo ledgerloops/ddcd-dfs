@@ -1,7 +1,7 @@
 {
   "name": "ddcd-dfs",
   "version": "0.0.1",
-  "description": "Decentralized Cycle Detection in Directed Graphs",
+  "description": "https://ledgerloops.com/ - Decentralized Cycle Detection in Directed Graphs",
   "main": "index.js",
   "directories": {
     "test": "test"
@@ -17,7 +17,7 @@
   "scripts": {
     "jshint": "./node_modules/.bin/jshint *.js test/*.js",
     "mocha": "./node_modules/.bin/mocha test/",
-    "test": "./node_modules/.bin/jshint *.js test/*.js; ./node_modules/.bin/mocha test/"
+    "test": "./node_modules/.bin/jshint *.js test/*.js && ./node_modules/.bin/mocha test/"
   },
   "repository": {
     "type": "git",
