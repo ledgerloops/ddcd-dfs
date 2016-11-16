@@ -16,7 +16,7 @@ Neighbor.prototype.sendStatusMessage = function(value, timestamp) {
     return 0;
   }
   this._ourLastMsg = {
-    msgType: 'status',
+    msgType: 'update-status',
     value,
     timestamp,
   };

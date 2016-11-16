@@ -79,6 +79,25 @@ Node.prototype.removeNeighbor = function(neighborId, direction) {
   }
 };
 
+Node.prototype.send = function(routing, obj) {
+  if (routing.type === 'incoming') {
+    if (obj.msgType === 'update-status') {
+      this.handleStatusMessage(routing.peerNick, routing.peerDirection, obj);
+    } else if (obj.msgType === 'probe') {
+      this.handleProbeMessage(routing.peerNick, routing.peerDirection, obj);
+    } else {
+      console.log({ routing, obj });
+      throw new Error('Incoming msg type not yet implemented');
+    }
+  }
+  console.log({ routing, obj });
+  throw new Error('Forwarding to other peer objects not yet implemented');
+};
+
+Node.prototype.updateNeighborStatus = function(theirNick, direction, msgCallback) {
+  this.addNeighbor(theirNick, direction, msgCallback);
+};
+
 Node.prototype._probeIsKnown = function(treeToken) {
   return (typeof this._routes[treeToken] !== 'undefined');
 };
