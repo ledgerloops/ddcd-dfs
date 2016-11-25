@@ -74,10 +74,15 @@ describe('Cross-edge', function() {
       e: false,
       f: false,
     };
-    for (var nodeId in shouldFindRoute) { 
+
+    function testShouldFindRoute(nodeId) {
       it(`${nodeId} should ${(shouldFindRoute[nodeId] ? '' : 'not')} find a route`, function() {
         assert.equal(graph.nodes[nodeId]._cycleFound, shouldFindRoute[nodeId]);
       });
+    }
+
+    for (var nodeId in shouldFindRoute) {
+      testShouldFindRoute(nodeId);
     }
   });
 });
